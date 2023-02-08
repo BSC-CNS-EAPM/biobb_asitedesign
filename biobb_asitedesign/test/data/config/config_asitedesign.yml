@@ -1,0 +1,3 @@
+properties:
+  binary_path: .
+  remove_tmp: false

@@ -1,0 +1,18 @@
+working_dir_path: /tmp/biobb/unitests
+
+ahatool:
+  paths:
+    input_path: .
+    output_path: .
+    ref_output_path: .
+  properties:
+    threads: 2
+    database: .
+    binary_path: .
+    remove_tmp: false
+
+
+
+
+
+
