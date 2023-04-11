@@ -139,7 +139,7 @@ Constraints: # Both bond/distance and sequence constraints can be applied. Its k
     reference: Input_file.pdb # PDB file to use as reference sequence
 
 nIterations: 2         # Number of adaptive sampling to be performed, i.e. numer of spawning
-nPoses: 3              # number of final poses, should always be nPoses <= nproccesses - 1
+nPoses: 2              # number of final poses, should always be nPoses <= nproccesses - 1
 nSteps: 1               # number of steps for each round of exploration
 Anneal: True             # Performs temperature annealing. This is default behavior
 kT_high: 500             # kT at High Temperature

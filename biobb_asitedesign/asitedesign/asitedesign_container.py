@@ -6,6 +6,7 @@ import os
 import shutil
 from pathlib import Path
 
+from biobb_asitedesign.asitedesign import common as com
 from biobb_common.generic.biobb_object import BiobbObject
 from biobb_common.configuration import settings
 from biobb_common.tools import file_utils as fu
@@ -25,6 +26,7 @@ class AsitedesignContainer(BiobbObject):
         params_folder (str): Path to the params folder. File type: input. Accepted formats: PARAMS (edam:format_).
         output_path (str): Path to the output file. File type: output. Accepted formats: zip (edam:format_3987).
         properties (dic):
+            * **cpus** (*int*) - (21) Number of cpus for the job.
             * **name** (*str*) - ('DesignCatalyticSite_job') Name of the job, which will be used for the output folders.
             * **DesignResidues** (*list*) - (None) List of residues that want to be mutable during the simulation.
             * **CatalyticResidues** (*list*) - (None) Specify the number of residues of the active site that wants to be added (RES1, RES2 ... RESN: H).
@@ -46,44 +48,44 @@ class AsitedesignContainer(BiobbObject):
         This is a use example of how to use the building block from Python::
             from biobb_asitedesign.asitedesign.asitedesign_container import asitedesign_container
             prop = {
-                'name': 4,
+                'cpus': 21,
                 'DesignResidues':
-                    {'28-A'   : 'ZX'
-                    '29-A'   : 'ZX'
-                    '30-A'   : 'ZX'
-                    '34-A'   : 'ZX'
-                    '57-A'   : 'ZX'
-                    '69-A'   : 'ZX'
-                    '93-A'   : 'ZX'
-                    '95-A'   : 'ZX'
-                    '120-A'  : 'ZX'
-                    '121-A'  : 'ZX'
-                    '125-A'  : 'ZX'
-                    '135-A'  : 'ZX'
-                    '139-A'  : 'ZX'
-                    '140-A'  : 'ZX'
-                    '143-A'  : 'ZX'
-                    '147-A'  : 'ZX'
-                    '154-A'  : 'ZX'
-                    '158-A'  : 'ZX'
-                    '155-A'  : 'ZX'
-                    '162-A'  : 'ZX'
-                    '183-A'  : 'ZX'
-                    '191-A'  : 'ZX'
-                    '195-A ' : 'ZX'
-                    '198-A'  : 'ZX'
-                    '199-A'  : 'ZX'
-                    '224-A'  : 'ZX'
-                    '225-A'  : 'ZX'
+                    {'28-A'   : 'ZX',
+                    '29-A'   : 'ZX',
+                    '30-A'   : 'ZX',
+                    '34-A'   : 'ZX',
+                    '57-A'   : 'ZX',
+                    '69-A'   : 'ZX',
+                    '93-A'   : 'ZX',
+                    '95-A'   : 'ZX',
+                    '120-A'  : 'ZX',
+                    '121-A'  : 'ZX',
+                    '125-A'  : 'ZX',
+                    '135-A'  : 'ZX',
+                    '139-A'  : 'ZX',
+                    '140-A'  : 'ZX',
+                    '143-A'  : 'ZX',
+                    '147-A'  : 'ZX',
+                    '154-A'  : 'ZX',
+                    '158-A'  : 'ZX',
+                    '155-A'  : 'ZX',
+                    '162-A'  : 'ZX',
+                    '183-A'  : 'ZX',
+                    '191-A'  : 'ZX',
+                    '195-A ' : 'ZX',
+                    '198-A'  : 'ZX',
+                    '199-A'  : 'ZX',
+                    '224-A'  : 'ZX',
+                    '225-A'  : 'ZX',
                     '230-A'  : 'ZX'
                     }
                 'CatalyticResidues':
-                    {'RES1': 'H'
-                    'RES2': 'S'
+                    {'RES1': 'H',
+                    'RES2': 'S',
                     'RES3': 'D-E'
                     }
                 'Ligands':
-                    {1-L:
+                    {'1-L':
                         {'RigidBody': True,
                         'Packing': True,
                         'PerturbationMode': 'MC',
@@ -134,6 +136,7 @@ class AsitedesignContainer(BiobbObject):
             }
             asitedesign_container(input_path='/path/to/my.fasta',
                             output_file_path='/path/to/newCompressedFile.zip',
+                            cpus= 21,
                             properties=prop)
     Info:
         * wrapped_software:
@@ -147,6 +150,7 @@ class AsitedesignContainer(BiobbObject):
 
     # 2. Adapt input and output file paths as required. Include all files, even optional ones
     def __init__(self, input_pdb, input_yaml, params_folder, output_path, properties=None, **kwargs) -> None:
+
         properties = properties or {}
 
         # 2.0 Call parent class constructor
@@ -156,24 +160,35 @@ class AsitedesignContainer(BiobbObject):
         # 2.1 Modify to match constructor parameters
         # Input/Output files
         self.io_dict = {
-            'in': {'input_pdb': input_pdb, 'input_yaml': input_yaml, 'params_folder': params_folder},
+            'in': {'input_pdb': input_pdb},
             'out': {'output_path': output_path}
         }
+        self.input_yaml = input_yaml
+
+        # Get a list of the parameters files
+        self.params_files = []
+        count = 0
+        for path in os.listdir(params_folder):
+            if os.path.isfile(os.path.join(params_folder, path)):
+                self.params_files.append(path)
+                self.io_dict['in'][path] = os.path.join(params_folder, path)
 
         # 3. Include all relevant properties here as
         # Properties specific for BB
+        self.cpus = properties.get('cpus', 4)
         self.name = properties.get('name', 'DesignCatalyticSite_job')
-        self.DesignResidues = properties.get('DesignResidues', None)
-        self.CatalyticResidues = properties.get('CatalyticResidues', None)
-        self.Ligands = properties.get('Ligands', None)
-        self.Constraints = properties.get('Constraints', None)
-        self.nIterations = properties.get('nIterations', 20)
-        self.nSteps = properties.get('nSteps', 5)
-        self.nPoses = properties.get('nPoses', 20)
-        self.Time = properties.get('Time', 48)
-        self.container_volume_path = properties.get('container_volume_path', '')
-        self.database_folder = properties.get('database_folder', )
-        self.container_path = properties.get('container_path', 'docker')
+        self.designResidues = properties.get('DesignResidues', None)
+        self.catalyticResidues = properties.get('CatalyticResidues', None)
+        self.ligands = properties.get('Ligands', None)
+        self.constraints = properties.get('Constraints', None)
+        self.nIterations = properties.get('nIterations', 5)
+        self.nSteps = properties.get('nSteps', 2)
+        self.nPoses = properties.get('nPoses', 3)
+        self.time = properties.get('Time', 48)
+        self.container_path = properties.get('container_path', 'singularity')
+        self.simulation_type = properties.get('simulation_type', 'CatalyticSite')
+        self.container_volume_path = properties.get('container_volume_path', '/data')
+        self.container_generic_command = properties.get('container_generic_command', 'exec')
         # self.container_shell_path = properties.get('container_shell_path', '/bin/bash')
         self.properties = properties
 
@@ -190,28 +205,48 @@ class AsitedesignContainer(BiobbObject):
         if self.check_restart(): return 0
         self.stage_files()
 
-        # Creating temporary folder
-        # self.tmp_folder = fu.create_unique_dir()
-        # fu.log('Creating %s temporary folder' % self.tmp_folder, self.out_log)
+        # Dict with the yaml properties form properties
+        workflow_dict = {'PDB': self.stage_io_dict['in']['input_pdb'],
+                         'ParameterFiles': [self.stage_io_dict['in'][params] for params in self.params_files],
+                         'nPoses': self.nPoses,
+                         'Name': self.name,
+                         'DesignResidues': self.designResidues,
+                         'CatalyticResidues': self.catalyticResidues,
+                         'Ligands': self.ligands,
+                         'Constraints': self.constraints,
+                         'nIterations': self.nIterations,
+                         'nSteps': self.nSteps,
+                         'Time': self.time,
+                         'simulation_type': self.simulation_type
+                         }
 
-        # 5. Prepare the command line parameters as instructions list
-        instructions = []
+        self.input_yaml_path_final = com.create_yaml(output_yaml_path=str(Path(self.stage_io_dict['unique_dir']).joinpath('input.yaml')),
+                                                     workflow_dict=workflow_dict,
+                                                     input_yaml_path=self.input_yaml,
+                                                     preset_dict=com.yaml_preset(workflow_dict['simulation_type']),
+                                                     container_volume_path= self.container_volume_path)
+
+        if self.input_yaml_path_final:
+            self.stage_io_dict['in']['input_yaml'] = f"{self.container_volume_path}/{self.input_yaml_path_final.split('/')[-1]}"
 
 
-        # 6. Build the actual command line as a list of items (elements order will be maintained)
-        self.cmd = [self.binary_path,
-                    ' '.join(instructions),
-                    '-i', os.path.basename(self.stage_io_dict['in']['input_path'])]
-        fu.log('Creating command line with instructions and required arguments', self.out_log, self.global_log)
+        # Append the mpirun with the cpus in front of the whole command execution
+        #if self.cpus:
+        #   self.container_path = f"mpirun -n {self.cpus} " + self.container_path
 
-        # 8. Uncomment to check the command line
-        print(' '.join(self.cmd))
+        self.cmd = [f"mpirun -n {self.cpus} python -m ActiveSiteDesign"]
+        if self.input_yaml_path_final:
+            self.cmd.append(f"{self.stage_io_dict['in']['input_yaml']}")
+
+        self.cmd.append("> output.out")
+
+        fu.log("Creating command line with instructions and required arguments", self.out_log, self.global_log)
+        print(self.cmd)
+
 
         # Run Biobb block
         self.run_biobb()
 
-        # Copy files to host
-        # self.copy_to_host()
 
         # Make zip file
         list_to_zip = [os.path.join(self.stage_io_dict.get('unique_dir'), f) for f in
@@ -230,38 +265,43 @@ class AsitedesignContainer(BiobbObject):
         return self.return_code
 
 
-def asitedesign_container(input_path: str, output_path: str,
+def asitedesign_container(input_pdb: str, input_yaml: str, params_folder: str, output_path: str,
                           properties: dict = None, **kwargs) -> int:
-    """Create :class:`TemplateContainer <template.template_container.TemplateContainer>` class and
-    execute the :meth:`launch() <template.template_container.TemplateContainer.launch>` method."""
+    """Create :class:`AsitedesignContainer <asitedesign.asitedesign_container.AsitedesignContainer>` class and
+    execute the :meth:`launch() <asitedesign.asitedesign_container.AsitedesignContainer.launch>` method."""
 
-    return AsitedesignContainer(input_path=input_path,
+    return AsitedesignContainer(input_pdb=input_pdb,
+                                input_yaml=input_yaml,
+                                params_folder=params_folder,
                                 output_path=output_path,
                                 properties=properties, **kwargs).launch()
 
 
 def main():
     """Command line execution of this building block. Please check the command line documentation."""
-    parser = argparse.ArgumentParser(description='Description for the template container module.',
+    parser = argparse.ArgumentParser(description='Wrapper of the AsiteDesign.',
                                      formatter_class=lambda prog: argparse.RawTextHelpFormatter(prog, width=99999))
-    parser.add_argument('--config', required=False, help='Configuration file')
+    parser.add_argument('-c', '--config', required=False, help='Configuration yaml file')
 
     # 10. Include specific args of each building block following the examples. They should match step 2
     required_args = parser.add_argument_group('required arguments')
-    required_args.add_argument('--input_path', required=True,
-                               help='Description for the first input file path. Accepted formats: top.')
+    required_args.add_argument('--input_pdb', required=True,
+                               help='Path of the pdb file. Accepted formats: pdb.')
+    required_args.add_argument('--params_folder', required=True,
+                               help='Path to the params folder.')
     required_args.add_argument('--output_path', required=True,
-                               help='Description for the output file path. Accepted formats: zip.')
+                               help='Path for the output file.')
 
     args = parser.parse_args()
-    args.config = args.config or "{}"
-    properties = settings.ConfReader(config=args.config).get_prop_dic()
+    config = args.config if args.config else None
+    properties = settings.ConfReader(config=config).get_prop_dic()
 
     # 11. Adapt to match Class constructor (step 2)
     # Specific call of each building block
     asitedesign_container(input_path=args.input_path,
-                      output_path=args.output_file_path,
-                      properties=properties)
+                          params_folder=args.params_folder,
+                          output_path=args.output_file_path,
+                          properties=properties)
 
 
 if __name__ == '__main__':
