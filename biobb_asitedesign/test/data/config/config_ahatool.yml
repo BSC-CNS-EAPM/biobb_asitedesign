@@ -1,0 +1,5 @@
+properties:
+  binary_path: .
+  database: .
+  remove_tmp: false
+  threads: 2

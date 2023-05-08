@@ -19,8 +19,13 @@ setuptools.setup(
         "Bioexcel": "https://bioexcel.eu/"
     },
     packages=setuptools.find_packages(exclude=['adapters', 'docs', 'test']),
-    install_requires=['biobb_common==3.9.0'],
+    install_requires=['biobb_common==4.0.0'],
     python_requires='>=3.7,<3.10',
+    entry_points={
+        "console_scripts": [
+            "asitedesign = biobb_asitedesign.asitedesign.asitedesign:main"
+        ]
+    },
     classifiers=(
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3.7",

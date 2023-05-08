@@ -1,0 +1,205 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://bioexcel.eu/biobb_asitedesign/json_schemas/1.0/asitedesign",
+    "name": "biobb_asitedesignsitedesign Asitedesign",
+    "title": "Wrapper of the AsiteDesign module.",
+    "description": "repository combines the PyRosetta modules with enhanced sampling techniques to design both the catalytic and non-catalytic residues in given active sites.",
+    "type": "object",
+    "info": {
+        "wrapped_software": {
+            "name": "AsiteDesign",
+            "version": ">=1.0",
+            "license": "BSD 3-Clause"
+        },
+        "ontology": {
+            "name": "EDAM",
+            "schema": "http://edamontology.org/EDAM.owl"
+        }
+    },
+    "required": [
+        "input_pdb",
+        "input_yaml",
+        "params_folder",
+        "output_path"
+    ],
+    "properties": {
+        "input_pdb": {
+            "type": "string",
+            "description": "Path to the input file pdb",
+            "filetype": "input",
+            "sample": null,
+            "enum": [
+                ".*\\.PDB$"
+            ],
+            "file_formats": [
+                {
+                    "extension": ".*\\.PDB$",
+                    "description": "Path to the input file pdb",
+                    "edam": "format_1476"
+                }
+            ]
+        },
+        "input_yaml": {
+            "type": "string",
+            "description": "Path to the input file yaml",
+            "filetype": "input",
+            "sample": null,
+            "enum": [
+                ".*\\.YAML$"
+            ],
+            "file_formats": [
+                {
+                    "extension": ".*\\.YAML$",
+                    "description": "Path to the input file yaml",
+                    "edam": "format_3750"
+                }
+            ]
+        },
+        "params_folder": {
+            "type": "string",
+            "description": "Path to the params folder",
+            "filetype": "input",
+            "sample": null,
+            "enum": [
+                ".*\\.PARAMS$"
+            ],
+            "file_formats": [
+                {
+                    "extension": ".*\\.PARAMS$",
+                    "description": "Path to the params folder",
+                    "edam": "format_"
+                }
+            ]
+        },
+        "output_path": {
+            "type": "string",
+            "description": "Path to the output file",
+            "filetype": "output",
+            "sample": null,
+            "enum": [
+                ".*\\.zip$"
+            ],
+            "file_formats": [
+                {
+                    "extension": ".*\\.zip$",
+                    "description": "Path to the output file",
+                    "edam": "format_3987"
+                }
+            ]
+        },
+        "properties": {
+            "type": "object",
+            "properties": {
+                "cpus": {
+                    "type": "integer",
+                    "default": 21,
+                    "wf_prop": false,
+                    "description": "Number of cpus for the job."
+                },
+                "name": {
+                    "type": "string",
+                    "default": "DesignCatalyticSite_job",
+                    "wf_prop": false,
+                    "description": "Name of the job, which will be used for the output folders."
+                },
+                "DesignResidues": {
+                    "type": "array",
+                    "default": null,
+                    "wf_prop": false,
+                    "description": "List of residues that want to be mutable during the simulation."
+                },
+                "CatalyticResidues": {
+                    "type": "array",
+                    "default": null,
+                    "wf_prop": false,
+                    "description": "Specify the number of residues of the active site that wants to be added (RES1, RES2 ... RESN: H)."
+                },
+                "Ligands": {
+                    "type": "array",
+                    "default": null,
+                    "wf_prop": false,
+                    "description": "1-L (you have to specify the ligand by giving the residue number and the chain of the specific LIG). Also, the torsions that want to be excluded must be specified by the user (\"ExcludedTorsions\")."
+                },
+                "Constraints": {
+                    "type": "array",
+                    "default": null,
+                    "wf_prop": false,
+                    "description": "Add the distance and sequence constraints that you want. The distance constraints should be added by passing two residues (with residue_number-chain) and two atoms (atomname) and to which values you want to constraint them (lb: value in angstroms, hb: value in angstroms)."
+                },
+                "nIterations": {
+                    "type": "integer",
+                    "default": 20,
+                    "wf_prop": false,
+                    "description": "Number of adaptive sampling epochs that want to be performed."
+                },
+                "nSteps": {
+                    "type": "integer",
+                    "default": 5,
+                    "wf_prop": false,
+                    "description": "Number of steps performed in each epoch/iteration."
+                },
+                "nPoses": {
+                    "type": "integer",
+                    "default": 20,
+                    "wf_prop": false,
+                    "description": "Number of final poses (mutants/designs) to be reported (each one given to a processor/CPU)."
+                },
+                "Time": {
+                    "type": "integer",
+                    "default": 48,
+                    "wf_prop": false,
+                    "description": "Time in the queue (if it's run in a cluster)."
+                },
+                "remove_tmp": {
+                    "type": "boolean",
+                    "default": true,
+                    "wf_prop": true,
+                    "description": "Remove temporal files."
+                },
+                "restart": {
+                    "type": "boolean",
+                    "default": false,
+                    "wf_prop": true,
+                    "description": "Do not execute if output files exist."
+                },
+                "container_path": {
+                    "type": "string",
+                    "default": "docker",
+                    "wf_prop": false,
+                    "description": "Container path definition."
+                },
+                "container_image": {
+                    "type": "string",
+                    "default": "bsceapm/asitedesign:X.X",
+                    "wf_prop": false,
+                    "description": "Container image definition."
+                },
+                "container_volume_path": {
+                    "type": "string",
+                    "default": "/home/projects",
+                    "wf_prop": false,
+                    "description": "Container volume path definition."
+                },
+                "container_working_dir": {
+                    "type": "string",
+                    "default": "/home/projects",
+                    "wf_prop": false,
+                    "description": "Container working directory definition."
+                },
+                "container_user_id": {
+                    "type": "string",
+                    "default": null,
+                    "wf_prop": false,
+                    "description": "Container user_id definition."
+                },
+                "container_shell_path": {
+                    "type": "string",
+                    "default": "/bin/bash",
+                    "wf_prop": false,
+                    "description": "Path to default shell inside the container."
+                }
+            }
+        }
+    },
+    "additionalProperties": false
+}
