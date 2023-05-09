@@ -22,7 +22,7 @@ class Asitedesign(BiobbObject):
     Args:
         input_pdb (str): Path to the input file pdb. File type: input. Accepted formats: PDB (edam:format_1476).
         input_yaml (str): Path to the input file yaml. File type: input. Accepted formats: YAML (edam:format_3750).
-        params_folder (str): Path to the params folder. File type: input. Accepted formats: PARAMS (edam:format_).
+        params_zip (str): Path to the params folder. File type: input. Accepted formats: PARAMS (edam:format_).
         output_path (str): Path to the output file. File type: output. Accepted formats: zip (edam:format_3987).
         properties (dic):
             * **cpus** (*int*) - (21) Number of cpus for the job.
@@ -165,7 +165,8 @@ class Asitedesign(BiobbObject):
         self.input_yaml = input_yaml
 
         # Get a list of the parameters files
-        self.params_files = fu.unzip_list(params_zip)
+        self.zip_directory = fu.create_unique_dir()
+        self.params_files = fu.unzip_list(params_zip, dest_dir=self.zip_directory )
         for path in self.params_files:
             self.io_dict['in'][Path(path).name] = path
 
@@ -182,7 +183,8 @@ class Asitedesign(BiobbObject):
         self.nPoses = properties.get('nPoses', 3)
         self.time = properties.get('Time', 48)
         self.container_path = properties.get('container_path', 'singularity')
-        self.container_image = properties.get('container_image', '/home/ubuntu/biobb/singularity/asitedesign.sif')
+        #self.container_image = properties.get('container_image', '/home/ubuntu/biobb/singularity/asitedesign.sif')
+        self.container_image = properties.get('container_image', '/home/albertcs/GitHub/EAPM/AsiteDesign-container/asitedesign.sif')
         self.simulation_type = properties.get('simulation_type', 'CatalyticSite')
         self.container_volume_path = properties.get('container_volume_path', '/data')
         self.container_generic_command = properties.get('container_generic_command', 'exec')
@@ -205,7 +207,7 @@ class Asitedesign(BiobbObject):
 
         # Dict with the yaml properties form properties
         workflow_dict = {'PDB': self.stage_io_dict['in']['input_pdb'],
-                         'ParameterFiles': [self.stage_io_dict['in'][params] for params in self.params_files],
+                         'ParameterFiles': self.params_files,
                          'nPoses': self.nPoses,
                          'Name': self.name,
                          'DesignResidues': self.designResidues,
@@ -246,12 +248,19 @@ class Asitedesign(BiobbObject):
         # Make zip file
         list_to_zip = [os.path.join(self.stage_io_dict.get('unique_dir'), f) for f in
                        os.listdir(self.stage_io_dict.get('unique_dir'))]
-        fu.zip_list(self.io_dict['out']['output_path'], list_to_zip)
+        list_to_zip.append("DesignCatalyticSite_job_final_pose")
+        list_to_zip.append("DesignCatalyticSite_job_output")
+        list_to_zip.append("output.out")
+        com.zip_list(self.io_dict['out']['output_path'], list_to_zip, self.out_log)
 
         # Remove temporary file(s)
         self.tmp_files.extend([
             self.stage_io_dict.get('unique_dir')
         ])
+        self.tmp_files.append("DesignCatalyticSite_job_final_pose")
+        self.tmp_files.append("DesignCatalyticSite_job_output")
+        self.tmp_files.append("output.out")
+        self.tmp_files.append(self.zip_directory)
         self.remove_tmp_files()
 
         # Check output arguments
@@ -260,14 +269,14 @@ class Asitedesign(BiobbObject):
         return self.return_code
 
 
-def asitedesign(input_pdb: str, input_yaml: str, params_folder: str, output_path: str,
+def asitedesign(input_pdb: str, input_yaml: str, params_zip: str, output_path: str,
                 properties: dict = None, **kwargs) -> int:
     """Create :class:`AsitedesignContainer <asitedesign.asitedesign_container.AsitedesignContainer>` class and
     execute the :meth:`launch() <asitedesign.asitedesign_container.AsitedesignContainer.launch>` method."""
 
     return Asitedesign(input_pdb=input_pdb,
                        input_yaml=input_yaml,
-                       params_folder=params_folder,
+                       params_zip=params_zip,
                        output_path=output_path,
                        properties=properties, **kwargs).launch()
 
@@ -282,7 +291,7 @@ def main():
     required_args = parser.add_argument_group('required arguments')
     required_args.add_argument('--input_pdb', required=True,
                                help='Path of the pdb file. Accepted formats: pdb.')
-    required_args.add_argument('--params_folder', required=True,
+    required_args.add_argument('--params_zip', required=True,
                                help='Path to the params folder.')
     required_args.add_argument('--input_yaml', required=True,
                                help='Path to the yaml file')
@@ -297,7 +306,7 @@ def main():
     # Specific call of each building block
     asitedesign(input_pdb=args.input_pdb,
                 input_yaml=args.input_yaml,
-                params_folder=args.params_folder,
+                params_zip=args.params_zip,
                 output_path=args.output_path,
                 properties=properties)
 
