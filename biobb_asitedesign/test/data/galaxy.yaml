@@ -1,0 +1,133 @@
+ActiveSiteDesignMode: MC
+ActiveSiteLoops: 1
+ActiveSiteSampling: Coupled
+Anneal: true
+CatalyticResidues:
+  RES1: H
+  RES2: S
+  RES3: D-E
+Constraints:
+  cst0:
+    atomi: C1
+    atomj: OG
+    hb: 4.0
+    lb: 3.0
+    resi: 1-L
+    resj: RES1
+    sd: 100.0
+    type: B
+  cst1:
+    atomi: OG
+    atomj: NE2-ND1
+    hb: 3.5
+    lb: 2.5
+    resi: RES1
+    resj: RES2
+    sd: 50.0
+    type: B
+  cst2:
+    atomi: NE2-ND1
+    atomj: OD1-OD2-OE1-OE2
+    hb: 3.5
+    lb: 2.5
+    resi: RES2
+    resj: RES3
+    sd: 50.0
+    type: B
+  cst3:
+    atomi: OG
+    atomj: CG-CD
+    hb: 8.0
+    lb: 7.0
+    resi: RES1
+    resj: RES3
+    sd: 50.0
+    type: B
+  cst4:
+    reference: /data/dataset_9ecf5868-16a8-42c5-b218-322391cbcadd.dat_345608.txt
+    type: S
+    weight: 1
+DesignResidues:
+  120-A: ZX
+  121-A: ZX
+  125-A: ZX
+  135-A: ZX
+  139-A: ZX
+  140-A: ZX
+  143-A: ZX
+  147-A: ZX
+  154-A: ZX
+  155-A: ZX
+  158-A: ZX
+  162-A: ZX
+  183-A: ZX
+  191-A: ZX
+  195-A: ZX
+  198-A: ZX
+  199-A: ZX
+  224-A: ZX
+  225-A: ZX
+  230-A: ZX
+  28-A: ZX
+  29-A: ZX
+  30-A: ZX
+  34-A: ZX
+  57-A: ZX
+  69-A: ZX
+  93-A: ZX
+  95-A: ZX
+DynamicSideChainCoupling: false
+LigandSampling: Coupled
+Ligands:
+- 1-L:
+    ClashOverlap: 0.6
+    Energy: Reduced
+    ExcludedTorsions:
+    - - C11
+      - C14
+      - C16
+      - C17
+    GridInterval: -4
+    MaxGrid: 4
+    MinGrid: 4
+    NeighbourCutoff: 15.0
+    NumberOfGridNeighborhoods: 2
+    Packing: true
+    PackingLoops: 1
+    PerturbationLoops: 1
+    PerturbationMode: MC
+    RigidBody: true
+    RotationLoops: 50
+    RotationSTD: 2.0
+    RotationScale: -1
+    SasaConstraint: 10
+    SasaCutoff: 0.6
+    SasaScaling: true
+    SideChainCoupling: 0.005
+    SimulationRadius: 5.0
+    TranslationLoops: 20
+    TranslationSTD: 0.5
+    TranslationScale: -1
+    nRandomTorsionPurturbation: 2
+MimimizeBackbone: true
+Name: DesignCatalyticSite_job
+PDB: /data/dataset_9ecf5868-16a8-42c5-b218-322391cbcadd.dat_345608.txt
+ParameterFiles:
+- /data/6/9/e/dataset_69e28fda-78fd-4b31-9558-943f4acac2cb.dat_345608.txt
+RankingMetric: FullAtom
+SoftRepulsion: false
+SpawningMethod: Adaptive
+SpawningMetric: Split
+SpawningMetricSteps:
+- 0.8 FullAtomWithConstraints
+- 1.0 FullAtom
+Time: 48
+WriteALL: true
+kT_decay: true
+kT_high: 500
+kT_highScale: true
+kT_low: 1
+nIterations: 20
+nNoneCatalytic: 1
+nPoses: 20
+nSteps: 5

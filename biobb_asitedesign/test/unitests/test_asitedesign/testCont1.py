@@ -1,4 +1,4 @@
-from biobb_asitedesign.asitedesign.asitedesign_container import asitedesign_container
+from biobb_asitedesign.asitedesign.asitedesign import asitedesign
 
 
 def main():
@@ -73,10 +73,10 @@ def main():
         "container_path": "singularity"
     }
 
-    rcode = asitedesign_container(
+    rcode = asitedesign(
         input_pdb="/home/albertcs/GitHub/EAPM/biobb_asitedesign/biobb_asitedesign/test/data/asitedesign/Input_file.pdb",
         input_yaml="/home/albertcs/GitHub/EAPM/biobb_asitedesign/biobb_asitedesign/test/data/asitedesign/DesignCatalyticSite.yaml",
-        params_folder="/home/albertcs/GitHub/EAPM/biobb_asitedesign/biobb_asitedesign/test/data/asitedesign/params",
+        params_zip="/home/albertcs/GitHub/EAPM/biobb_asitedesign/biobb_asitedesign/test/data/asitedesign/params.zip",
         output_path="/home/albertcs/GitHub/EAPM/biobb_asitedesign/biobb_asitedesign/test/data/asitedesign/output.zip",
         properties=prop)
 

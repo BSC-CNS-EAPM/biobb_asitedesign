@@ -4,6 +4,8 @@
 import argparse
 import os
 from pathlib import Path
+import shutil
+import zipfile
 
 from biobb_asitedesign.asitedesign import common as com
 from biobb_common.generic.biobb_object import BiobbObject
@@ -24,16 +26,16 @@ class Asitedesign(BiobbObject):
         input_yaml (str): Path to the input file yaml. File type: input. Accepted formats: YAML (edam:format_3750).
         params_zip (str): Path to the params folder. File type: input. Accepted formats: PARAMS (edam:format_).
         output_path (str): Path to the output file. File type: output. Accepted formats: zip (edam:format_3987).
-        properties (dic):
-            * **cpus** (*int*) - (21) Number of cpus for the job.
+        properties (dict):
+            * **cpus** (*int*) - (2) Number of cpus for the job.
             * **name** (*str*) - ('DesignCatalyticSite_job') Name of the job, which will be used for the output folders.
             * **DesignResidues** (*list*) - (None) List of residues that want to be mutable during the simulation.
             * **CatalyticResidues** (*list*) - (None) Specify the number of residues of the active site that wants to be added (RES1, RES2 ... RESN: H).
             * **Ligands** (*list*) - (None) 1-L (you have to specify the ligand by giving the residue number and the chain of the specific LIG). Also, the torsions that want to be excluded must be specified by the user ("ExcludedTorsions").
             * **Constraints** (*list*) - (None) Add the distance and sequence constraints that you want. The distance constraints should be added by passing two residues (with residue_number-chain) and two atoms (atomname) and to which values you want to constraint them (lb: value in angstroms, hb: value in angstroms).
-            * **nIterations** (*int*) - (20) Number of adaptive sampling epochs that want to be performed.
-            * **nSteps** (*int*) - (5) Number of steps performed in each epoch/iteration.
-            * **nPoses** (*int*) - (20) Number of final poses (mutants/designs) to be reported (each one given to a processor/CPU).
+            * **nIterations** (*int*) - (2) Number of adaptive sampling epochs that want to be performed.
+            * **nSteps** (*int*) - (2) Number of steps performed in each epoch/iteration.
+            * **nPoses** (*int*) - (2) Number of final poses (mutants/designs) to be reported (each one given to a processor/CPU).
             * **Time** (*int*) - (48) Time in the queue (if it's run in a cluster).
             * **remove_tmp** (*bool*) - (True) [WF property] Remove temporal files.
             * **restart** (*bool*) - (False) [WF property] Do not execute if output files exist.
@@ -165,10 +167,23 @@ class Asitedesign(BiobbObject):
         self.input_yaml = input_yaml
 
         # Get a list of the parameters files
-        self.zip_directory = fu.create_unique_dir()
-        self.params_files = fu.unzip_list(params_zip, dest_dir=self.zip_directory )
-        for path in self.params_files:
-            self.io_dict['in'][Path(path).name] = path
+        
+        self.params_files = []
+        if os.path.isdir(Path(params_zip)):
+            for root, dirs, files in os.walk(params_zip):
+                for file in files:
+                    if file.endswith('.params'):
+                        self.io_dict['in'][file] = os.path.join(root, file)
+                        self.params_files.append(os.path.join(root, file))
+        elif zipfile.is_zipfile(Path(params_zip)):
+            self.zip_directory = fu.create_unique_dir()
+            self.params_files = fu.unzip_list(params_zip, dest_dir=self.zip_directory)
+            for path in self.params_files:
+                self.io_dict['in'][Path(path).name] = path
+        else:
+            if os.path.exists(Path(params_zip)):
+                self.params_files = [params_zip]
+
 
         # 3. Include all relevant properties here as
         # Properties specific for BB
@@ -205,9 +220,13 @@ class Asitedesign(BiobbObject):
             return 0
         self.stage_files()
 
+        # Copy params files to the unique directory
+        for path in self.params_files:
+            shutil.copy(path, self.stage_io_dict['unique_dir'])
+                    
         # Dict with the yaml properties form properties
         workflow_dict = {'PDB': self.stage_io_dict['in']['input_pdb'],
-                         'ParameterFiles': self.params_files,
+                         'ParameterFiles': [f"{self.container_volume_path}/{Path(path).name}" for path in self.params_files],
                          'nPoses': self.nPoses,
                          'Name': self.name,
                          'DesignResidues': self.designResidues,
@@ -228,7 +247,7 @@ class Asitedesign(BiobbObject):
 
         if self.input_yaml_path_final:
             self.stage_io_dict['in']['input_yaml'] = f"{self.container_volume_path}/{self.input_yaml_path_final.split('/')[-1]}"
-
+        
         # Append the mpirun with the cpus in front of the whole command execution
         # if self.cpus:
         #    self.container_path = f"mpirun -n {self.cpus} " + self.container_path
@@ -260,7 +279,7 @@ class Asitedesign(BiobbObject):
         self.tmp_files.append("DesignCatalyticSite_job_final_pose")
         self.tmp_files.append("DesignCatalyticSite_job_output")
         self.tmp_files.append("output.out")
-        self.tmp_files.append(self.zip_directory)
+        self.tmp_files.extend(self.params_files)
         self.remove_tmp_files()
 
         # Check output arguments

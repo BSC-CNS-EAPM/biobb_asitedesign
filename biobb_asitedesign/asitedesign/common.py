@@ -34,8 +34,6 @@ def search_string_yaml(filename, string):
         return string in contents
 
 
-
-
 def write_yaml(output_yaml_path: str, workflow_dict: Mapping[str, str], yaml_dict: Mapping[str, str], container_volume_path) -> str:
     yaml_final = {}
     if workflow_dict.get('PDB'):
@@ -64,7 +62,7 @@ def write_yaml(output_yaml_path: str, workflow_dict: Mapping[str, str], yaml_dic
         if k == 'Constraints':
             for const in v:
                 if 'reference' in v[const].keys():
-                    v[const]['reference'] = f"{container_volume_path}/{v[const]['reference']}"
+                    v[const]['reference'] = workflow_dict['PDB']
         if not k in yaml_final.keys():
             yaml_final[k] = v
 
@@ -105,8 +103,6 @@ def zip_list(zip_file: str, file_list: typing.Iterable[str], out_log: logging.Lo
                 if os.path.isdir(Path(f)):
                     for root, dirs, files in os.walk(f):
                         for file in files:
-                            print(f"file: {file}")
-                            print(f"root+/+file {root}/{file}")
                             zip_f.write(root+"/"+file)
                             inserted.append(file)
                 if base_name in inserted:
