@@ -188,7 +188,7 @@ class Asitedesign(BiobbObject):
         # 3. Include all relevant properties here as
         # Properties specific for BB
         self.cpus = properties.get('cpus', 1)
-        self.name = properties.get('name', 'DesignCatalyticSite_job')
+        self.name = properties.get('name', None)
         self.designResidues = properties.get('DesignResidues', None)
         self.catalyticResidues = properties.get('CatalyticResidues', None)
         self.ligands = properties.get('Ligands', None)
@@ -239,11 +239,12 @@ class Asitedesign(BiobbObject):
                          'simulation_type': self.simulation_type
                          }
 
-        self.input_yaml_path_final = com.create_yaml(output_yaml_path=str(Path(self.stage_io_dict['unique_dir']).joinpath('input.yaml')),
+        self.input_yaml_path_final, self.name = com.create_yaml(output_yaml_path=str(Path(self.stage_io_dict['unique_dir']).joinpath('input.yaml')),
                                                      workflow_dict=workflow_dict,
                                                      input_yaml_path=self.input_yaml,
                                                      preset_dict=com.yaml_preset(workflow_dict['simulation_type']),
-                                                     container_volume_path=self.container_volume_path)
+                                                     container_volume_path=self.container_volume_path,
+                                                     unique_dir=self.stage_io_dict['unique_dir'])
 
         if self.input_yaml_path_final:
             self.stage_io_dict['in']['input_yaml'] = f"{self.container_volume_path}/{self.input_yaml_path_final.split('/')[-1]}"
@@ -256,7 +257,7 @@ class Asitedesign(BiobbObject):
         if self.input_yaml_path_final:
             self.cmd.append(f"{self.stage_io_dict['in']['input_yaml']}")
 
-        self.cmd.append("> output.out")
+        self.cmd.append(f"> output.out")
 
         fu.log("Creating command line with instructions and required arguments", self.out_log, self.global_log)
         print(self.cmd)
@@ -265,21 +266,21 @@ class Asitedesign(BiobbObject):
         self.run_biobb()
 
         # Make zip file
-        list_to_zip = [os.path.join(self.stage_io_dict.get('unique_dir'), f) for f in
-                       os.listdir(self.stage_io_dict.get('unique_dir'))]
-        list_to_zip.append("DesignCatalyticSite_job_final_pose")
-        list_to_zip.append("DesignCatalyticSite_job_output")
-        list_to_zip.append("output.out")
+        list_to_zip = []
+        list_to_zip.append(os.path.basename(self.stage_io_dict.get('unique_dir')))
+        #list_to_zip.append(f"{self.name}_final_pose")
+        #list_to_zip.append(f"{self.name}_output")
+        #list_to_zip.append("output.out")
         com.zip_list(self.io_dict['out']['output_path'], list_to_zip, self.out_log)
 
         # Remove temporary file(s)
         self.tmp_files.extend([
             self.stage_io_dict.get('unique_dir')
         ])
-        self.tmp_files.append("DesignCatalyticSite_job_final_pose")
-        self.tmp_files.append("DesignCatalyticSite_job_output")
-        self.tmp_files.append("output.out")
-        self.tmp_files.extend(self.params_files)
+        #self.tmp_files.append(f"{self.name}_final_pose")
+        #self.tmp_files.append(f"{self.name}_output")
+        #self.tmp_files.append("output.out")
+        #self.tmp_files.extend(self.params_files)
         self.remove_tmp_files()
 
         # Check output arguments

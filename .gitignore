@@ -1,3 +1,8 @@
 .idea
 biobb_asitedesign/__pycache__/*
 biobb_asitedesign/asitedesign/__pycache__/*
+dist/*
+build/lib/biobb_asitedesign/test/*
+biobb_asitedesign.egg-info/*
+64d98952-cf82-4ef9-bcbe-a77b00a7b003/*
+b9182db1-4ffb-4886-bdeb-749af39ec525/VS1.fa.params

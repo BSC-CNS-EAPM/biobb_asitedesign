@@ -12,7 +12,8 @@ from biobb_asitedesign.asitedesign.preset import SOFTWARE_PARAMS
 
 
 def create_yaml(output_yaml_path: str, workflow_dict: Mapping[str, str], input_yaml_path: str = None,
-                preset_dict: Mapping[str, str] = None, yaml_properties_dict: Mapping[str, str] = None, container_volume_path="/data") -> str:
+                preset_dict: Mapping[str, str] = None, yaml_properties_dict: Mapping[str, str] = None, container_volume_path="/data",
+                unique_dir = None):
     yaml_dict = {}  # : Dict[str, str]
     if preset_dict:
         for k, v in preset_dict.items():
@@ -24,8 +25,12 @@ def create_yaml(output_yaml_path: str, workflow_dict: Mapping[str, str], input_y
     if yaml_properties_dict:
         for k, v in yaml_properties_dict.items():
             yaml_dict[k] = v
-
-    return write_yaml(output_yaml_path, workflow_dict, yaml_dict, container_volume_path)
+    
+    name = yaml_dict['Name']
+    yaml_dict['Name'] = f"{unique_dir}/{name}"
+    yml = write_yaml(output_yaml_path, workflow_dict, yaml_dict, container_volume_path)
+    
+    return yml, name
 
 
 def search_string_yaml(filename, string):
