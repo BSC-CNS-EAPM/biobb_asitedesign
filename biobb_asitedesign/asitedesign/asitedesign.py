@@ -39,6 +39,7 @@ class Asitedesign(BiobbObject):
             * **Time** (*int*) - (48) Time in the queue (if it's run in a cluster).
             * **remove_tmp** (*bool*) - (True) [WF property] Remove temporal files.
             * **restart** (*bool*) - (False) [WF property] Do not execute if output files exist.
+            * **sandbox_path** (*str*) - ("./") [WF property] Parent path to the sandbox directory.
             * **container_path** (*str*) - (docker) Container path definition.
             * **container_image** (*str*) - ('bsceapm/asitedesign:X.X') Container image definition.
             * **container_volume_path** (*str*) - ('/home/projects') Container volume path definition.
@@ -167,7 +168,7 @@ class Asitedesign(BiobbObject):
         self.input_yaml = input_yaml
 
         # Get a list of the parameters files
-        
+
         self.params_files = []
         if os.path.isdir(Path(params_zip)):
             for root, dirs, files in os.walk(params_zip):
@@ -184,7 +185,6 @@ class Asitedesign(BiobbObject):
             if os.path.exists(Path(params_zip)):
                 self.params_files = [params_zip]
 
-
         # 3. Include all relevant properties here as
         # Properties specific for BB
         self.cpus = properties.get('cpus', 1)
@@ -198,7 +198,7 @@ class Asitedesign(BiobbObject):
         self.nPoses = properties.get('nPoses', 3)
         self.time = properties.get('Time', 48)
         self.container_path = properties.get('container_path', 'singularity')
-        #self.container_image = properties.get('container_image', '/home/ubuntu/biobb/singularity/asitedesign.sif')
+        # self.container_image = properties.get('container_image', '/home/ubuntu/biobb/singularity/asitedesign.sif')
         self.container_image = properties.get('container_image', '/home/albertcs/GitHub/EAPM/AsiteDesign-container/asitedesign.sif')
         self.simulation_type = properties.get('simulation_type', 'CatalyticSite')
         self.container_volume_path = properties.get('container_volume_path', '/data')
@@ -223,7 +223,7 @@ class Asitedesign(BiobbObject):
         # Copy params files to the unique directory
         for path in self.params_files:
             shutil.copy(path, self.stage_io_dict['unique_dir'])
-                    
+
         # Dict with the yaml properties form properties
         workflow_dict = {'PDB': self.stage_io_dict['in']['input_pdb'],
                          'ParameterFiles': [f"{self.container_volume_path}/{Path(path).name}" for path in self.params_files],
@@ -240,15 +240,15 @@ class Asitedesign(BiobbObject):
                          }
 
         self.input_yaml_path_final, self.name = com.create_yaml(output_yaml_path=str(Path(self.stage_io_dict['unique_dir']).joinpath('input.yaml')),
-                                                     workflow_dict=workflow_dict,
-                                                     input_yaml_path=self.input_yaml,
-                                                     preset_dict=com.yaml_preset(workflow_dict['simulation_type']),
-                                                     container_volume_path=self.container_volume_path,
-                                                     unique_dir=self.stage_io_dict['unique_dir'])
+                                                                workflow_dict=workflow_dict,
+                                                                input_yaml_path=self.input_yaml,
+                                                                preset_dict=com.yaml_preset(workflow_dict['simulation_type']),
+                                                                container_volume_path=self.container_volume_path,
+                                                                unique_dir=self.stage_io_dict['unique_dir'])
 
         if self.input_yaml_path_final:
             self.stage_io_dict['in']['input_yaml'] = f"{self.container_volume_path}/{self.input_yaml_path_final.split('/')[-1]}"
-        
+
         # Append the mpirun with the cpus in front of the whole command execution
         # if self.cpus:
         #    self.container_path = f"mpirun -n {self.cpus} " + self.container_path
@@ -268,19 +268,19 @@ class Asitedesign(BiobbObject):
         # Make zip file
         list_to_zip = []
         list_to_zip.append(os.path.basename(self.stage_io_dict.get('unique_dir')))
-        #list_to_zip.append(f"{self.name}_final_pose")
-        #list_to_zip.append(f"{self.name}_output")
-        #list_to_zip.append("output.out")
+        # list_to_zip.append(f"{self.name}_final_pose")
+        # list_to_zip.append(f"{self.name}_output")
+        # list_to_zip.append("output.out")
         com.zip_list(self.io_dict['out']['output_path'], list_to_zip, self.out_log)
 
         # Remove temporary file(s)
         self.tmp_files.extend([
             self.stage_io_dict.get('unique_dir')
         ])
-        #self.tmp_files.append(f"{self.name}_final_pose")
-        #self.tmp_files.append(f"{self.name}_output")
-        #self.tmp_files.append("output.out")
-        #self.tmp_files.extend(self.params_files)
+        # self.tmp_files.append(f"{self.name}_final_pose")
+        # self.tmp_files.append(f"{self.name}_output")
+        # self.tmp_files.append("output.out")
+        # self.tmp_files.extend(self.params_files)
         self.remove_tmp_files()
 
         # Check output arguments
